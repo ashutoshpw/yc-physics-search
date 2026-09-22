@@ -17,6 +17,16 @@ You can start editing the page by modifying `src/app/page.tsx`. The page auto-up
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Linting
+
+This project uses [Oxlint](https://oxc.rs/docs/guide/usage/linter) (configured in `.oxlintrc.json`) with type-aware rules powered by `oxlint-tsgolint`.
+
+```bash
+bun run lint       # lint with type-aware rules
+bun run lint:fix   # apply auto-fixes
+bun run typecheck  # TypeScript type checking
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

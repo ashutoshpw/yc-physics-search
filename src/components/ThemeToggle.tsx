@@ -16,7 +16,7 @@ export const ThemeToggle: React.FC = () => {
     <button
       ref={ref}
       type="button"
-      onClick={toggleSwitchTheme}
+      onClick={() => void toggleSwitchTheme()}
       aria-label="Toggle color theme"
       title="Toggle color theme"
       className="w-7 h-7 rounded-md text-faint hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center"

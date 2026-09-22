@@ -35,7 +35,7 @@ export const StartupTooltip: React.FC<StartupTooltipProps> = ({ startup, rect })
     // rect.x/y/width/height are read directly; startup identity plus the
     // numeric fields are what should trigger a reposition (a new rect object
     // with the same values shouldn't re-run this).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps
   }, [startup, rect?.x, rect?.y, rect?.width, rect?.height]);
 
   if (!startup || !rect) return null;
