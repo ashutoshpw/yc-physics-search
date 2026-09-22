@@ -1,7 +1,18 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { Geist, Geist_Mono } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import './globals.css';
+
+const geistSans = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist-sans',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+});
 
 export const metadata: Metadata = {
   title: 'YC Physics Search | Semantic Startup Discovery',
@@ -16,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased overflow-hidden">
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
