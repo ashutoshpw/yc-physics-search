@@ -40,19 +40,19 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, resultCou
     <div className="w-full max-w-2xl mx-auto px-4 z-20 flex flex-col items-center pointer-events-auto">
       {/* Active Category Tag / Status Badge */}
       {categoryLabel && (
-        <div className="mb-2 px-3 py-1 rounded-full bg-neutral-900/90 border border-neutral-700/60 text-xs text-neutral-300 font-medium backdrop-blur-md motion-safe:animate-fade-in shadow-lg flex items-center gap-2">
+        <div className="mb-2 px-3 py-1 rounded-full bg-surface/90 border border-border/60 text-xs text-secondary-foreground font-medium backdrop-blur-md motion-safe:animate-fade-in shadow-lg flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>{categoryLabel}</span>
-          <span className="text-neutral-500 font-mono">({resultCount})</span>
+          <span className="text-faint font-mono">({resultCount})</span>
         </div>
       )}
 
       {/* Main Search Input Box */}
       <div className="relative w-full group">
-        <div className="relative flex items-center bg-neutral-950/80 backdrop-blur-xl border border-neutral-800/80 rounded-2xl shadow-2xl transition-[border-color,box-shadow] duration-200 ease-out group-focus-within:border-neutral-700 group-focus-within:shadow-[0_0_35px_rgba(255,255,255,0.08)]">
-          <div className="pl-4 text-neutral-400">
+        <div className="relative flex items-center bg-input/80 backdrop-blur-xl border border-border-subtle/80 rounded-2xl shadow-2xl transition-[border-color,box-shadow] duration-200 ease-out group-focus-within:border-border group-focus-within:shadow-[0_0_35px_rgba(0,0,0,0.06)] dark:group-focus-within:shadow-[0_0_35px_rgba(255,255,255,0.08)]">
+          <div className="pl-4 text-muted-foreground">
             <svg
-              className="w-5 h-5 transition-colors group-focus-within:text-white"
+              className="w-5 h-5 transition-colors group-focus-within:text-foreground"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -71,14 +71,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, resultCou
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={`Try: "${EXAMPLE_QUERIES[currentPlaceholderIdx]}"`}
-            className="w-full py-3.5 px-3 bg-transparent text-white text-sm md:text-base font-normal placeholder-neutral-500 focus:outline-none"
+            className="w-full py-3.5 px-3 bg-transparent text-foreground text-sm md:text-base font-normal placeholder:text-faint focus:outline-none"
             autoFocus
           />
 
           {value && (
             <button
               onClick={() => onChange('')}
-              className="pr-4 text-neutral-500 hover:text-neutral-300 text-xs font-mono transition-colors"
+              className="pr-4 text-faint hover:text-secondary-foreground text-xs font-mono transition-colors"
             >
               ESC
             </button>
@@ -95,7 +95,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, resultCou
           <button
             key={q}
             onClick={() => onChange(q)}
-            className="text-[11px] px-2.5 py-1 rounded-lg bg-neutral-900/60 hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 border border-neutral-800/80 transition-colors duration-200 backdrop-blur-sm"
+            className="text-[11px] px-2.5 py-1 rounded-lg bg-surface/60 hover:bg-muted text-muted-foreground hover:text-foreground border border-border-subtle/80 transition-colors duration-200 backdrop-blur-sm"
           >
             {q}
           </button>

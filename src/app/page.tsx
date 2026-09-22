@@ -5,6 +5,7 @@ import { PhysicsPile } from '@/components/PhysicsPile';
 import { SearchBar } from '@/components/SearchBar';
 import { StartupTooltip } from '@/components/StartupTooltip';
 import { StartupModal } from '@/components/StartupModal';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { Startup } from '@/data/startups';
 import { searchStartups } from '@/lib/search';
 
@@ -42,20 +43,21 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-[#09090b] text-neutral-100 flex flex-col items-center justify-between select-none">
+    <main className="relative w-screen h-screen overflow-hidden bg-background text-foreground flex flex-col items-center justify-between select-none">
       {/* Top Header Bar */}
       <header className="w-full px-6 py-4 flex items-center justify-between z-20 pointer-events-none">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-[#ff6600] flex items-center justify-center font-bold text-white text-xs shadow-md">
             Y
           </div>
-          <span className="font-semibold text-sm tracking-tight text-neutral-200">
+          <span className="font-semibold text-sm tracking-tight text-foreground">
             YC Universe Search
           </span>
         </div>
 
-        <div className="flex items-center gap-4 text-xs text-neutral-500 font-mono pointer-events-auto">
-          <span>Physics Engine Active</span>
+        <div className="flex items-center gap-3 text-xs text-faint font-mono pointer-events-auto">
+          <span className="hidden sm:inline">Physics Engine Active</span>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -77,7 +79,7 @@ export default function Home() {
       </div>
 
       {/* Footer Info */}
-      <footer className="w-full px-6 py-3 flex items-center justify-center text-[11px] text-neutral-600 z-10 pointer-events-none">
+      <footer className="w-full px-6 py-3 flex items-center justify-center text-[11px] text-faint z-10 pointer-events-none">
         <span>Type natural queries above to see matching startups lift into the grid</span>
       </footer>
 

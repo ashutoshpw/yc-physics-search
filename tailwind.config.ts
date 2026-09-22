@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,8 +10,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        background: "rgb(var(--background) / <alpha-value>)",
+        foreground: "rgb(var(--foreground) / <alpha-value>)",
+        surface: "rgb(var(--surface) / <alpha-value>)",
+        input: "rgb(var(--input) / <alpha-value>)",
+        muted: "rgb(var(--muted) / <alpha-value>)",
+        "muted-foreground": "rgb(var(--muted-foreground) / <alpha-value>)",
+        "secondary-foreground": "rgb(var(--secondary-foreground) / <alpha-value>)",
+        faint: "rgb(var(--faint) / <alpha-value>)",
+        border: "rgb(var(--border) / <alpha-value>)",
+        "border-subtle": "rgb(var(--border-subtle) / <alpha-value>)",
       },
       keyframes: {
         "fade-in": {

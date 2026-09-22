@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Startup, YC_STARTUPS } from '@/data/startups';
+import { CANVAS_THEME, type CanvasThemePalette } from '@/lib/canvas-theme';
+import { getTheme, subscribeTheme } from '@/components/theme-provider';
 
 interface TileBody {
   id: string;
@@ -75,6 +77,8 @@ export const PhysicsPile: React.FC<PhysicsPileProps> = ({ matchedIds, onHoverSta
   const hoveredTileRef = useRef<TileBody | null>(null);
   const onHoverStartupRef = useRef(onHoverStartup);
   const onSelectStartupRef = useRef(onSelectStartup);
+  const themeRef = useRef<CanvasThemePalette>(CANVAS_THEME[getTheme()]);
+  const forceRenderRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     onHoverStartupRef.current = onHoverStartup;
@@ -83,6 +87,15 @@ export const PhysicsPile: React.FC<PhysicsPileProps> = ({ matchedIds, onHoverSta
   useEffect(() => {
     onSelectStartupRef.current = onSelectStartup;
   }, [onSelectStartup]);
+
+  // Redraw immediately on theme change so the View Transition snapshot of the
+  // "new" state captures the re-themed canvas instead of racing the rAF loop.
+  useEffect(() => {
+    return subscribeTheme(() => {
+      themeRef.current = CANVAS_THEME[getTheme()];
+      forceRenderRef.current?.();
+    });
+  }, []);
 
   // Initialize pool of startup tiles pre-settled near the bottom pile
   useEffect(() => {
@@ -246,8 +259,9 @@ export const PhysicsPile: React.FC<PhysicsPileProps> = ({ matchedIds, onHoverSta
     let prevMouseX = mousePosRef.current.x;
     let prevMouseY = mousePosRef.current.y;
     let wasIdle = false;
+    let needsRedraw = false;
 
-    const render = (now: number) => {
+    const render = (now: number, skipHover = false) => {
       const dt = Math.min(3, Math.max(0, (now - lastTime) / (1000 / 60)));
       lastTime = now;
 
@@ -403,7 +417,7 @@ export const PhysicsPile: React.FC<PhysicsPileProps> = ({ matchedIds, onHoverSta
         }
 
         // Handle Hover state notification
-        if (activeHover !== hoveredTileRef.current) {
+        if (!skipHover && activeHover !== hoveredTileRef.current) {
           hoveredTileRef.current = activeHover;
           if (activeHover) {
             onHoverStartupRef.current(activeHover.startup, {
@@ -419,10 +433,11 @@ export const PhysicsPile: React.FC<PhysicsPileProps> = ({ matchedIds, onHoverSta
       }
 
       // Skip redraw entirely once settled and nothing changed since the last drawn frame
-      if (idle && wasIdle) {
+      if (idle && wasIdle && !needsRedraw) {
         animFrameRef.current = requestAnimationFrame(render);
         return;
       }
+      needsRedraw = false;
       wasIdle = idle;
 
       ctx.clearRect(0, 0, width, height);
@@ -441,7 +456,7 @@ export const PhysicsPile: React.FC<PhysicsPileProps> = ({ matchedIds, onHoverSta
 
         // Shadow / Glow: real blurred shadow only for GRID/hovered tiles
         if (t.state === 'GRID' || isHovered) {
-          ctx.shadowColor = isHovered ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.6)';
+          ctx.shadowColor = isHovered ? themeRef.current.hoverGlow : themeRef.current.tileShadow;
           ctx.shadowBlur = isHovered ? 18 : 9;
           ctx.shadowOffsetY = 4;
         } else {
@@ -449,27 +464,27 @@ export const PhysicsPile: React.FC<PhysicsPileProps> = ({ matchedIds, onHoverSta
           ctx.shadowColor = 'transparent';
           ctx.shadowBlur = 0;
           ctx.shadowOffsetY = 0;
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+          ctx.fillStyle = themeRef.current.pileShadow;
           ctx.beginPath();
           ctx.roundRect(-half, -half + 2, currentSize, currentSize, r);
           ctx.fill();
         }
 
         // Rounded Rect Tile Background
-        ctx.fillStyle = t.startup.bgColor || '#18181b';
+        ctx.fillStyle = t.startup.bgColor || themeRef.current.tileFallback;
         ctx.beginPath();
         ctx.roundRect(-half, -half, currentSize, currentSize, r);
         ctx.fill();
 
         // Subtle border
         ctx.lineWidth = isHovered ? 2 : 1;
-        ctx.strokeStyle = isHovered ? '#FFFFFF' : 'rgba(255, 255, 255, 0.16)';
+        ctx.strokeStyle = isHovered ? themeRef.current.borderHover : themeRef.current.border;
         ctx.stroke();
 
         // Logo Glyphs / Iconography
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
-        ctx.fillStyle = t.startup.textColor || '#FFFFFF';
+        ctx.fillStyle = t.startup.textColor || themeRef.current.textFallback;
         ctx.font = `${Math.floor(currentSize * 0.44)}px system-ui, -apple-system, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -481,12 +496,19 @@ export const PhysicsPile: React.FC<PhysicsPileProps> = ({ matchedIds, onHoverSta
       animFrameRef.current = requestAnimationFrame(render);
     };
 
+    forceRenderRef.current = () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      needsRedraw = true;
+      render(performance.now(), true);
+    };
+
     animFrameRef.current = requestAnimationFrame(render);
 
     return () => {
       window.removeEventListener('resize', handleResize);
       dprMediaQuery?.removeEventListener('change', onDprChange);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      forceRenderRef.current = null;
     };
   }, []);
 

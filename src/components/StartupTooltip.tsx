@@ -57,7 +57,7 @@ export const StartupTooltip: React.FC<StartupTooltipProps> = ({ startup, rect })
       <div
         ref={innerRef}
         style={{ transformOrigin: flipped ? 'top center' : 'bottom center' }}
-        className="w-72 p-3.5 bg-neutral-900/95 backdrop-blur-md border border-neutral-700/80 rounded-xl shadow-2xl text-left motion-safe:animate-pop-in"
+        className="w-72 p-3.5 bg-surface/95 backdrop-blur-md border border-border/80 rounded-xl shadow-2xl text-left motion-safe:animate-pop-in"
       >
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <div className="flex items-center gap-2">
@@ -68,23 +68,23 @@ export const StartupTooltip: React.FC<StartupTooltipProps> = ({ startup, rect })
               {startup.symbolGlyph}
             </div>
             <div>
-              <h4 className="text-white text-sm font-semibold leading-tight">{startup.name}</h4>
-              <span className="text-[11px] text-neutral-400 font-mono">{startup.country}</span>
+              <h4 className="text-foreground text-sm font-semibold leading-tight">{startup.name}</h4>
+              <span className="text-[11px] text-muted-foreground font-mono">{startup.country}</span>
             </div>
           </div>
 
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-300 border border-neutral-700 font-semibold">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-muted text-secondary-foreground border border-border font-semibold">
             {startup.batch}
           </span>
         </div>
 
-        <p className="text-xs text-neutral-300 leading-relaxed line-clamp-3 mb-2">
+        <p className="text-xs text-secondary-foreground leading-relaxed line-clamp-3 mb-2">
           {startup.description}
         </p>
 
-        <div className="flex flex-wrap gap-1 pt-1 border-t border-neutral-800/80 text-[10px] text-neutral-400">
+        <div className="flex flex-wrap gap-1 pt-1 border-t border-border-subtle/80 text-[10px] text-muted-foreground">
           {startup.categories.map((c) => (
-            <span key={c} className="px-1.5 py-0.5 rounded bg-neutral-800/60 text-neutral-400">
+            <span key={c} className="px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground">
               #{c}
             </span>
           ))}
