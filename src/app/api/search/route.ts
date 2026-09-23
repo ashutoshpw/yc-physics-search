@@ -1,57 +1,85 @@
 import { NextResponse } from 'next/server';
+import { choice, TypeSafeClient, type ChoiceResponse } from '@typesafe-ai/sdk';
 import { searchStartups } from '@/lib/search';
+import { applyFilters, describeFilters, FILTER_VOCAB, hasFilters, type SearchApiResponse, type SearchFilters } from '@/lib/filters';
+
+// Below this confidence an extracted filter is ignored rather than risk a wrong match.
+const MIN_CONFIDENCE = 0.5;
+const NONE = 'none';
+
+// Created lazily so a missing TYPESAFE_API_KEY only disables AI parsing instead of crashing the route.
+let client: TypeSafeClient | null | undefined;
+function getClient(): TypeSafeClient | null {
+  if (client === undefined) {
+    client = process.env.TYPESAFE_API_KEY ? new TypeSafeClient({ timeout: 5000, retry: { maxRetries: 1 } }) : null;
+  }
+  return client;
+}
+
+const options = (labels: string[]) =>
+  Object.fromEntries([...labels, NONE].map((label) => [label, label === NONE ? 'Not mentioned in the query' : null]));
+
+const QUESTIONS = {
+  color: choice('Which dominant logo color does the query ask for?', options(FILTER_VOCAB.colors)),
+  symbol: choice('Which logo symbol, animal, or object does the query ask for?', options(FILTER_VOCAB.symbols)),
+  batch: choice(
+    'Which YC batch does the query ask for? W = Winter, S = Summer, digits = year (e.g. "summer 2024" = S24).',
+    options(FILTER_VOCAB.batches)
+  ),
+  region: choice('Which geographic region does the query restrict to?', options(FILTER_VOCAB.regions)),
+  category: choice('Which industry or product category does the query ask for?', options(FILTER_VOCAB.categories)),
+  era: choice('Does the query ask for the earliest or the most recent YC startups?', {
+    first: 'The first / earliest / original YC startups',
+    newest: 'The newest / latest / most recent YC startups',
+    [NONE]: 'Neither',
+  }),
+};
+
+function pick<T extends string>(answer: ChoiceResponse): T | undefined {
+  return answer.choice !== NONE && answer.confidence >= MIN_CONFIDENCE ? (answer.choice as T) : undefined;
+}
+
+async function parseWithTypeSafe(ts: TypeSafeClient, query: string): Promise<SearchFilters> {
+  const { answers } = await ts.systemOne({ state: { query }, questions: QUESTIONS });
+  return {
+    color: pick(answers.color),
+    symbol: pick(answers.symbol),
+    batch: pick(answers.batch),
+    region: pick(answers.region),
+    category: pick(answers.category),
+    era: pick(answers.era),
+  };
+}
 
 export async function POST(req: Request) {
   try {
     const { query } = await req.json();
-    if (!query || typeof query !== 'string') {
-      return NextResponse.json({ matches: [], categoryLabel: '' });
+    if (!query || typeof query !== 'string' || !query.trim()) {
+      return NextResponse.json<SearchApiResponse>({ matchIds: [], source: 'local' });
     }
 
-    // Default fast local heuristic search
-    const localResult = searchStartups(query);
-
-    // If OPENAI_API_KEY is configured in .env.local, optionally enhance with LLM reasoning
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (apiKey) {
+    const ts = getClient();
+    if (ts) {
       try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content:
-                  'You parse natural language search queries for a YC startup directory. Extract relevant keywords, colors (red, blue, green, yellow, black, purple, orange), symbols (dog, cat, alien, rocket, etc.), batch (e.g. S24, W05), and region (USA, Asia, Europe). Return JSON: {"color": string|null, "symbol": string|null, "batch": string|null, "region": string|null, "keyword": string|null, "label": string}',
-              },
-              { role: 'user', content: query },
-            ],
-            response_format: { type: 'json_object' },
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const parsed = JSON.parse(data.choices[0].message.content);
-          // If the LLM extracted a more refined intent, combine or use it
-          return NextResponse.json({
-            matches: localResult.matches,
-            categoryLabel: parsed.label || localResult.matchedCategoryLabel,
+        const filters = await parseWithTypeSafe(ts, query);
+        const matches = hasFilters(filters) ? applyFilters(filters) : [];
+        if (matches.length > 0) {
+          return NextResponse.json<SearchApiResponse>({
+            matchIds: matches.map((s) => s.id),
+            categoryLabel: describeFilters(filters),
+            source: 'ai',
           });
         }
-      } catch (llmErr) {
-        console.error('LLM query parsing fallback to local:', llmErr);
+      } catch (aiErr) {
+        console.error('TypeSafe query parsing failed; falling back to local search:', aiErr);
       }
     }
 
-    return NextResponse.json({
-      matches: localResult.matches,
+    const localResult = searchStartups(query);
+    return NextResponse.json<SearchApiResponse>({
+      matchIds: localResult.matches.map((s) => s.id),
       categoryLabel: localResult.matchedCategoryLabel,
+      source: 'local',
     });
   } catch (error) {
     console.error('Search API error:', error);
