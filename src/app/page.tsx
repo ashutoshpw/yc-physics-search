@@ -44,6 +44,7 @@ export default function Home() {
 
   return (
     <main className="relative w-screen h-screen overflow-hidden bg-background text-foreground flex flex-col items-center justify-between select-none">
+      <div aria-hidden className="ambient-bg pointer-events-none absolute inset-0 z-0" />
       {/* Top Header Bar */}
       <header className="w-full px-6 py-4 flex items-center justify-between z-20 pointer-events-none">
         <div className="flex items-center gap-2">
